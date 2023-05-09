@@ -5,18 +5,15 @@
 
 import { Duplex } from "node:stream";
 import { IBinaryHelper } from "./hepler";
-import { BinaryWriterMixins } from "./writer";
-import { BinaryReaderMixins } from "./reader";
+import { BinaryWriteStreamMixins, IBinaryWritableMixins } from "./writer";
+import { BinaryReadStreamMixins, IBinaryReadableMixins } from "./reader";
 
-export class BinaryDuplex extends BinaryWriterMixins(
-  BinaryReaderMixins(IBinaryHelper<Duplex>)
+export class BinaryDuplexStream extends BinaryWriteStreamMixins(
+  IBinaryWritableMixins(
+    BinaryReadStreamMixins(IBinaryReadableMixins(IBinaryHelper<Duplex>))
+  )
 ) {
-  static from(
-    stream: Duplex,
-    ...args: ConstructorParameters<typeof BinaryDuplex>
-  ) {
-    const duplex = new this(...args);
-    duplex.connect(stream);
-    return duplex;
+  static from(...args: ConstructorParameters<typeof BinaryDuplexStream>) {
+    return new this(...args);
   }
 }

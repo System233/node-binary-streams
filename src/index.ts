@@ -3,7 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-export { BinaryReader } from "./reader";
-export { BinaryWriter } from "./writer";
-export { BinaryDuplex } from "./duplex";
+export { BinaryReadStream } from "./reader";
+export { BinaryWriteStream } from "./writer";
+export { BinaryDuplexStream } from "./duplex";
 

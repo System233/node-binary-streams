@@ -15,7 +15,7 @@ import {
   CloseStream,
 } from "./utils";
 import path from "node:path";
-import { BinaryWriter } from "../src";
+import { BinaryWriteStream } from "../src";
 import { NullOfEncoding } from "../src/constants";
 const tmpdir = os.tmpdir();
 const temp = fs.mkdtempSync(path.join(tmpdir, "binary-streams"));
@@ -27,33 +27,12 @@ describe("BinaryWriter", async () => {
   after(() => {
     fs.rmSync(temp, { recursive: true });
   });
-  it("connect/disconnect", async () => {
+  it("init/end", async () => {
     const stream = createWriteStream(path);
-    const writer = new BinaryWriter();
-    assert.ok(!writer.readable);
-    assert.ok(!writer.writable);
-    assert.ok(!writer.connected);
-    writer.connect(stream);
-    assert.ok(!writer.readable);
+    const writer = new BinaryWriteStream(stream);
     assert.ok(writer.writable);
-    assert.ok(writer.connected);
-    writer.disconnect();
-    assert.ok(!writer.readable);
-    assert.ok(!writer.writable);
-    assert.ok(!writer.connected);
-    writer.connect(stream);
-    assert.ok(!writer.readable);
-    assert.ok(writer.writable);
-    assert.ok(writer.connected);
-    
     stream.close();
-    await new Promise<void>((resolve, reject) => {
-      writer.on("disconnect", resolve);
-      setTimeout(() => reject(new Error("disconnect timeout")), 1000);
-    });
-    assert.ok(!writer.readable);
     assert.ok(!writer.writable);
-    assert.ok(!writer.connected);
   });
 
   const TestFile = (name: string, buffer: Buffer) => {
@@ -71,7 +50,7 @@ describe("BinaryWriter", async () => {
         const path = type;
         const wstream = createWriteStream(path);
         const [value, le, be] = CASES[type];
-        BinaryWriter.from(wstream)[name](value).flush();
+        BinaryWriteStream.from(wstream)[name](value);
 
         await CloseStream(wstream);
         assert.ok(!TestFile(path, littleEndian ? le : be));
@@ -85,7 +64,7 @@ describe("BinaryWriter", async () => {
         const wstream = createWriteStream(path);
 
         const [value, le, be] = CASES[type];
-        BinaryWriter.from(wstream)[name](value).flush();
+        BinaryWriteStream.from(wstream)[name](value);
 
         await CloseStream(wstream);
         wstream.once("close", () => {
@@ -99,7 +78,7 @@ describe("BinaryWriter", async () => {
       const path = type + mode;
       const wstream = createWriteStream(path);
       const [value, le, be] = CASES[type];
-      BinaryWriter.from(wstream)[name](value).flush();
+      BinaryWriteStream.from(wstream)[name](value);
 
       await CloseStream(wstream);
       assert.ok(!TestFile(path, littleEndian ? le : be));
@@ -112,9 +91,9 @@ describe("BinaryWriter", async () => {
       const wstream = createWriteStream(name);
       const key = ("Int" + byteLength * 8) as NumberType;
       const [value, le, be] = CASES[key];
-      BinaryWriter.from(wstream)
+      BinaryWriteStream.from(wstream)
         [`writeInt`](value, byteLength, littleEndian)
-        .flush();
+        ;
 
       await CloseStream(wstream);
       assert.ok(!TestFile(name, littleEndian ? le : be));
@@ -125,14 +104,14 @@ describe("BinaryWriter", async () => {
     it(name, async () => {
       const wstream = createWriteStream(name);
       const [value, data] = CASES_TEXT[encoding];
-      BinaryWriter.from(wstream)["writeString"](value, encoding).flush();
+      BinaryWriteStream.from(wstream)["writeString"](value, encoding);
       await CloseStream(wstream);
       assert.ok(!TestFile(name, data));
     });
     it("writeBytes", async () => {
       const wstream = createWriteStream(name);
       const [value, data] = CASES_TEXT[encoding];
-      BinaryWriter.from(wstream)["writeBytes"](data).flush();
+      BinaryWriteStream.from(wstream)["writeBytes"](data);
 
       await CloseStream(wstream);
       assert.ok(!TestFile(name, data));
@@ -142,7 +121,7 @@ describe("BinaryWriter", async () => {
       it(name, async () => {
         const wstream = createWriteStream(name);
         const [value, data] = CASES_TEXT[encoding];
-        BinaryWriter.from(wstream)["writeCString"](value, encoding).flush();
+        BinaryWriteStream.from(wstream)["writeCString"](value, encoding);
 
         await CloseStream(wstream);
         assert.ok(
@@ -156,7 +135,7 @@ describe("BinaryWriter", async () => {
         const wstream = createWriteStream(name);
         const [value, data] = CASES_TEXT[encoding];
         const buffer = Buffer.from(data.toString("base64"));
-        BinaryWriter.from(wstream)[name](data).flush();
+        BinaryWriteStream.from(wstream)[name](data);
         await CloseStream(wstream);
         assert.ok(!TestFile(name, buffer));
       });
@@ -167,7 +146,7 @@ describe("BinaryWriter", async () => {
         const wstream = createWriteStream(name);
         const [value, data] = CASES_TEXT[encoding];
         const buffer = Buffer.from(data.toString("hex"));
-        BinaryWriter.from(wstream)[name](data).flush();
+        BinaryWriteStream.from(wstream)[name](data);
         await CloseStream(wstream);
         assert.ok(!TestFile(name, buffer));
       });
@@ -178,7 +157,7 @@ describe("BinaryWriter", async () => {
         const wstream = createWriteStream(name);
         const [value, data] = CASES_TEXT[encoding];
         const buffer = Buffer.from(value, "utf8");
-        BinaryWriter.from(wstream)[name](value).flush();
+        BinaryWriteStream.from(wstream)[name](value);
         await CloseStream(wstream);
         assert.ok(!TestFile(name, buffer));
       });

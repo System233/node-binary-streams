@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import { Readable } from "stream";
-import { BinaryReader } from "../src";
+import { BinaryReadStream } from "../src";
 
 (async()=>{
 
@@ -26,7 +26,7 @@ import { BinaryReader } from "../src";
             clearInterval(timer)
         }
     },500)
-    const reader = BinaryReader.from(stream);
+    const reader = BinaryReadStream.from(stream);
     reader.readInt32LE().then(x=>console.log('co','readInt32LE','0x'+x.toString(16)))
     reader.readInt8().then(x=>console.log('co','readInt8',x))
     reader.readUint8().then(x=>console.log('co','readUint8',x))

@@ -2,19 +2,27 @@
   "name": "binary-streams",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
-    "test": "npx ts-node ./tests/main.ts"
+    "test": "npx ts-node ./tests/main.ts",
+    "build": "npm run build:cjs&npm run build:esm",
+    "build:cjs": "npx tsc --project tsconfig.cjs.json",
+    "build:esm": "npx tsc --project tsconfig.esm.json"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/System233/node-binary-streams.git"
   },
   "keywords": [
-    "async",
     "binary",
     "stream",
-    "socket"
+    "async",
+    "socket",
+    "readable",
+    "writable",
+    "duplex"
   ],
   "author": "System233",
   "license": "MIT",

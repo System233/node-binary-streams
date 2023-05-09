@@ -5,7 +5,7 @@
 
 import { after, describe, it } from "node:test";
 import os from "node:os";
-import { BinaryReader } from "../src";
+import { BinaryReadStream } from "../src";
 import assert from "node:assert";
 import fs, { read } from "node:fs";
 import {
@@ -31,37 +31,17 @@ describe("BinaryReader", async () => {
   after(() => {
     fs.rmSync(temp, { recursive: true });
   });
-  it("connect/disconnect", async () => {
+  it("init/end", async () => {
     const stream = new Readable({read(){}});
-    const reader = new BinaryReader();
-    assert.ok(!reader.readable);
-    assert.ok(!reader.writable);
-    assert.ok(!reader.connected);
-    reader.connect(stream);
+    const reader = new BinaryReadStream(stream);
     assert.ok(reader.readable);
-    assert.ok(!reader.writable);
-    assert.ok(reader.connected);
-    reader.disconnect();
-    assert.ok(!reader.readable);
-    assert.ok(!reader.writable);
-    assert.ok(!reader.connected);
-    reader.connect(stream);
-    assert.ok(reader.readable);
-    assert.ok(!reader.writable);
-    assert.ok(reader.connected);
     const breakRead=new Promise<void>((resolve,reject)=>{
       reader.readInt8().then(reject).catch(resolve);
       setTimeout(()=>reject(new Error('Break Read timeout')),1000);
     });
     stream.destroy();
-    await new Promise<void>((resolve, reject) => {
-      reader.on("disconnect", resolve);
-      setTimeout(() => reject(new Error("disconnect timeout")), 1000);
-    });
     await breakRead;
     assert.ok(!reader.readable);
-    assert.ok(!reader.writable);
-    assert.ok(!reader.connected);
   });
 
   const MakeTest = (type: AllNumberType, mode: "LE" | "BE") => {
@@ -72,7 +52,7 @@ describe("BinaryReader", async () => {
         const path = type;
         const [value, le, be] = CASES[type];
         const rstream = createReadStream(path, littleEndian ? le : be);
-        const result = await BinaryReader.from(rstream)[name]();
+        const result = await BinaryReadStream.from(rstream)[name]();
         await CloseStream(rstream);
         assert.equal(result, value);
       });
@@ -84,7 +64,7 @@ describe("BinaryReader", async () => {
         const path = type + mode;
         const [value, le, be] = CASES[type];
         const rstream = createReadStream(path, littleEndian ? le : be);
-        const result = await BinaryReader.from(rstream)[name]();
+        const result = await BinaryReadStream.from(rstream)[name]();
         await CloseStream(rstream);
         assert.equal(result, value);
       });
@@ -95,7 +75,7 @@ describe("BinaryReader", async () => {
       const path = type + mode;
       const [value, le, be] = CASES[type];
       const rstream = createReadStream(path, littleEndian ? le : be);
-      const result = await BinaryReader.from(rstream)[name]();
+      const result = await BinaryReadStream.from(rstream)[name]();
       await CloseStream(rstream);
       assert.equal(result, value);
     });
@@ -107,7 +87,7 @@ describe("BinaryReader", async () => {
       const key = ("Int" + byteLength * 8) as NumberType;
       const [value, le, be] = CASES[key];
       const rstream = createReadStream(name, littleEndian ? le : be);
-      const result = await BinaryReader.from(rstream)[`readInt`](
+      const result = await BinaryReadStream.from(rstream)[`readInt`](
         byteLength,
         littleEndian
       );
@@ -121,7 +101,7 @@ describe("BinaryReader", async () => {
       it(name, async () => {
         const [value, data] = CASES_TEXT[encoding];
         const rstream = createReadStream(name, data);
-        const result = await BinaryReader.from(rstream)["readString"](
+        const result = await BinaryReadStream.from(rstream)["readString"](
           data.byteLength,
           encoding
         );
@@ -134,7 +114,7 @@ describe("BinaryReader", async () => {
       it(name, async () => {
         const [value, data] = CASES_TEXT[encoding];
         const rstream = createReadStream(name, data);
-        const result = await BinaryReader.from(rstream)[name](data.byteLength);
+        const result = await BinaryReadStream.from(rstream)[name](data.byteLength);
         await CloseStream(rstream);
         assert.equal(Buffer.compare(result, data), 0);
       });
@@ -147,7 +127,7 @@ describe("BinaryReader", async () => {
           name,
           Buffer.concat([data, NullOfEncoding[encoding]])
         );
-        const result = await BinaryReader.from(rstream)["readCString"](
+        const result = await BinaryReadStream.from(rstream)["readCString"](
           encoding
         );
         await CloseStream(rstream);
@@ -160,7 +140,7 @@ describe("BinaryReader", async () => {
         const [value, data] = CASES_TEXT[encoding];
         const buffer = Buffer.from(data.toString("base64"));
         const rstream = createReadStream(name, buffer);
-        const result = await BinaryReader.from(rstream)[name](
+        const result = await BinaryReadStream.from(rstream)[name](
           buffer.byteLength
         );
         await CloseStream(rstream);
@@ -173,7 +153,7 @@ describe("BinaryReader", async () => {
         const [value, data] = CASES_TEXT[encoding];
         const buffer = Buffer.from(data.toString("hex"));
         const rstream = createReadStream(name, buffer);
-        const result = await BinaryReader.from(rstream)[name](
+        const result = await BinaryReadStream.from(rstream)[name](
           buffer.byteLength
         );
         await CloseStream(rstream);
@@ -186,7 +166,7 @@ describe("BinaryReader", async () => {
         const [value, data] = CASES_TEXT[encoding];
         const buffer = Buffer.from(value, "utf-8");
         const rstream = createReadStream(name, buffer);
-        const result = await BinaryReader.from(rstream)[name](
+        const result = await BinaryReadStream.from(rstream)[name](
           buffer.byteLength
         );
         await CloseStream(rstream);
