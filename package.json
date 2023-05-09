@@ -1,0 +1,29 @@
+{
+  "name": "binary-streams",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "npx ts-node ./tests/main.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/System233/node-binary-streams.git"
+  },
+  "keywords": [
+    "async",
+    "binary",
+    "stream",
+    "socket"
+  ],
+  "author": "System233",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/System233/node-binary-streams/issues"
+  },
+  "homepage": "https://github.com/System233/node-binary-streams#readme",
+  "devDependencies": {
+    "@types/node": "^20.1.0",
+    "typescript": "^5.0.4"
+  }
+}
