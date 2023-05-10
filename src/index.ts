@@ -6,4 +6,4 @@
 export { BinaryReadStream } from "./reader";
 export { BinaryWriteStream } from "./writer";
 export { BinaryDuplexStream } from "./duplex";
-
+export { ReadableEvent, WritableEvent, DuplexEvent } from "./events";

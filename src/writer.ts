@@ -7,13 +7,16 @@ import { Writable } from "node:stream";
 import { NullOfEncoding, SizeOfType } from "./constants";
 import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler";
 import { Readable } from "stream";
+import { WritableEvent } from "./events";
+
+
 
 export const BinaryWriteStreamMixins = <
   T extends IBinaryHelperConstructor<Writable>
 >(
   Base: T
 ) =>
-  class IBinaryWriter extends Base {
+  class IBinaryWriteStream extends Base {
     alloc(size: number, writer: (buffer: Buffer) => void) {
       const buffer = Buffer.alloc(size);
       writer(buffer);
@@ -186,12 +189,13 @@ export const BinaryWriteStreamMixins = <
       return this.alloc(SizeOfType.Double, (x) => x.writeDoubleBE(value));
     }
   };
+
 export const IBinaryWritableMixins = <
   T extends Constructor<IBinaryHelper<Writable>>
 >(
   Base: T
 ) =>
-  class IBinaryWriter extends Base implements Writable {
+  class IBinaryWritable extends Base implements Writable {
     get writable() {
       return this.stream.writable;
     }
@@ -287,86 +291,52 @@ export const IBinaryWritableMixins = <
       this.stream.destroy(error);
       return this;
     }
-    addListener(event: "close", listener: () => void): this;
-    addListener(event: "drain", listener: () => void): this;
-    addListener(event: "error", listener: (err: Error) => void): this;
-    addListener(event: "finish", listener: () => void): this;
-    addListener(event: "pipe", listener: (src: Readable) => void): this;
-    addListener(event: "unpipe", listener: (src: Readable) => void): this;
-    addListener(
-      event: string | symbol,
-      listener: (...args: any[]) => void
+
+    addListener<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
     ): this {
       this.stream.addListener(event, listener);
       return this;
     }
-    emit(event: "close"): boolean;
-    emit(event: "drain"): boolean;
-    emit(event: "error", err: Error): boolean;
-    emit(event: "finish"): boolean;
-    emit(event: "pipe", src: Readable): boolean;
-    emit(event: "unpipe", src: Readable): boolean;
-    emit(event: string | symbol, ...args: any[]): boolean {
+    emit<T extends keyof WritableEvent>(
+      event: T,
+      ...args: Parameters<WritableEvent[T]>
+    ): boolean {
       return this.stream.emit(event, ...args);
     }
-    on(event: "close", listener: () => void): this;
-    on(event: "drain", listener: () => void): this;
-    on(event: "error", listener: (err: Error) => void): this;
-    on(event: "finish", listener: () => void): this;
-    on(event: "pipe", listener: (src: Readable) => void): this;
-    on(event: "unpipe", listener: (src: Readable) => void): this;
-    on(event: string | symbol, listener: (...args: any[]) => void): this {
+    on<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
+    ): this {
       this.stream.on(event, listener);
       return this;
     }
-    once(event: "close", listener: () => void): this;
-    once(event: "drain", listener: () => void): this;
-    once(event: "error", listener: (err: Error) => void): this;
-    once(event: "finish", listener: () => void): this;
-    once(event: "pipe", listener: (src: Readable) => void): this;
-    once(event: "unpipe", listener: (src: Readable) => void): this;
-    once(event: string | symbol, listener: (...args: any[]) => void): this {
+    once<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
+    ): this {
       this.stream.once(event, listener);
       return this;
     }
-    prependListener(event: "close", listener: () => void): this;
-    prependListener(event: "drain", listener: () => void): this;
-    prependListener(event: "error", listener: (err: Error) => void): this;
-    prependListener(event: "finish", listener: () => void): this;
-    prependListener(event: "pipe", listener: (src: Readable) => void): this;
-    prependListener(event: "unpipe", listener: (src: Readable) => void): this;
-    prependListener(
-      event: string | symbol,
-      listener: (...args: any[]) => void
+    prependListener<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
     ): this {
       this.stream.prependListener(event, listener);
       return this;
     }
-    prependOnceListener(event: "close", listener: () => void): this;
-    prependOnceListener(event: "drain", listener: () => void): this;
-    prependOnceListener(event: "error", listener: (err: Error) => void): this;
-    prependOnceListener(event: "finish", listener: () => void): this;
-    prependOnceListener(event: "pipe", listener: (src: Readable) => void): this;
-    prependOnceListener(
-      event: "unpipe",
-      listener: (src: Readable) => void
-    ): this;
-    prependOnceListener(
-      event: string | symbol,
-      listener: (...args: any[]) => void
+    prependOnceListener<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
     ): this {
       this.stream.prependOnceListener(event, listener);
       return this;
     }
-    removeListener(event: "close", listener: () => void): this;
-    removeListener(event: "drain", listener: () => void): this;
-    removeListener(event: "error", listener: (err: Error) => void): this;
-    removeListener(event: "finish", listener: () => void): this;
-    removeListener(event: "pipe", listener: (src: Readable) => void): this;
-    removeListener(event: "unpipe", listener: (src: Readable) => void): this;
-    removeListener(
-      event: string | symbol,
-      listener: (...args: any[]) => void
+
+    removeListener<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
     ): this {
       this.stream.removeListener(event, listener);
       return this;
@@ -377,11 +347,15 @@ export const IBinaryWritableMixins = <
     ): T {
       return this.stream.pipe(destination, options);
     }
-    off(eventName: string | symbol, listener: (...args: any[]) => void): this {
-      this.stream.off(eventName, listener);
+
+    off<T extends keyof WritableEvent>(
+      event: T,
+      listener: WritableEvent[T]
+    ): this {
+      this.stream.off(event, listener);
       return this;
     }
-    removeAllListeners(event?: string | symbol | undefined): this {
+    removeAllListeners(event?: string | symbol): this {
       this.stream.removeAllListeners(event);
       return this;
     }
@@ -408,6 +382,7 @@ export const IBinaryWritableMixins = <
       return this.eventNames();
     }
   };
+
 export class BinaryWriteStream extends BinaryWriteStreamMixins(
   IBinaryWritableMixins(IBinaryHelper<Writable>)
 ) {
