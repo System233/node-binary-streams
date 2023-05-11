@@ -21,6 +21,8 @@
     "binary",
     "stream",
     "async",
+    "buffer",
+    "streams",
     "socket",
     "readable",
     "writable",
