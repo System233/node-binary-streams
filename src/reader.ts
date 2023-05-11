@@ -4,24 +4,22 @@
 // https://opensource.org/licenses/MIT
 
 import { Readable } from "node:stream";
-import { SizeOfEncoding, NullOfEncoding, SizeOfType } from "./constants";
-import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler";
-import { ReadableEvent } from "./events";
+import { SizeOfEncoding, NullOfEncoding, SizeOfType } from "./constants.js";
+import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler.js";
+import { ReadableEvent } from "./events.js";
 
-
-
-export const BinaryReadStreamMixins = <
+export const IBinaryReadStreamMixins = <
   T extends IBinaryHelperConstructor<Readable>
 >(
   Base: T
 ) =>
-  class IBinaryReadStream extends Base {
-    async read(size: number) {
+  class IBinaryReadStreamImpl extends Base {
+    async get(size: number) {
       if (!this.readable) {
         throw new Error("stream not readable");
       }
-      if (size <= this.stream.readableLength) {
-        const data = this.stream.read(size) as Buffer;
+      if (size <= this.readableLength) {
+        const data = this.read(size) as Buffer;
         return data;
       }
       let current = 0;
@@ -29,22 +27,21 @@ export const BinaryReadStreamMixins = <
       while (current < size) {
         await new Promise<void>((resolve, reject) => {
           const error = () => {
-            reject(new Error("stream ended"));
-            this.stream.off("readable", success);
-            this.stream.off("end", error);
-            this.stream.off("close", error);
+            reject(new Error(`stream ${this.closed ? "closed" : "ended"}`));
+            this.off("readable", success);
+            this.off(this.closed ? "end" : "closed", error);
           };
           const success = () => {
             resolve();
-            this.stream.off("end", error);
-            this.stream.off("close", error);
+            this.off("end", error);
+            this.off("close", error);
           };
-          this.stream.once("readable", success);
-          this.stream.once("close", error);
-          this.stream.once("end", error);
+          this.once("readable", success);
+          this.once("close", error);
+          this.once("end", error);
         });
-        const len = Math.min(size - current, this.stream.readableLength);
-        const chunk = this.stream.read(len);
+        const len = Math.min(size - current, this.readableLength);
+        const chunk = this.read(len);
         if (chunk) {
           chunks.push(chunk);
           current += len;
@@ -55,7 +52,7 @@ export const BinaryReadStreamMixins = <
     async readUntil(until: Buffer) {
       const chunks: Buffer[] = [];
       do {
-        const chunk = await this.read(until.length);
+        const chunk = await this.get(until.length);
         chunks.push(chunk);
         if (!Buffer.compare(chunk, until)) {
           return Buffer.concat(chunks);
@@ -63,7 +60,7 @@ export const BinaryReadStreamMixins = <
       } while (true);
     }
     async readBytes(size: number) {
-      return await this.read(size);
+      return await this.get(size);
     }
     async readLine(encoding?: BufferEncoding) {
       const x = await this.readUntil(Buffer.from("\n", encoding));
@@ -118,11 +115,11 @@ export const BinaryReadStreamMixins = <
       return await this.readIntBE(byteLength);
     }
     async readIntLE(byteLength: number) {
-      const x = await this.read(byteLength);
+      const x = await this.get(byteLength);
       return x.readIntLE(0, byteLength);
     }
     async readIntBE(byteLength: number) {
-      const x = await this.read(byteLength);
+      const x = await this.get(byteLength);
       return x.readIntBE(0, byteLength);
     }
 
@@ -133,16 +130,16 @@ export const BinaryReadStreamMixins = <
       return await this.readUintBE(byteLength);
     }
     async readUintLE(byteLength: number) {
-      const x = await this.read(byteLength);
+      const x = await this.get(byteLength);
       return x.readUintLE(0, byteLength);
     }
     async readUintBE(byteLength: number) {
-      const x = await this.read(byteLength);
+      const x = await this.get(byteLength);
       return x.readUintBE(0, byteLength);
     }
 
     async readInt8() {
-      const x = await this.read(SizeOfType.Int8);
+      const x = await this.get(SizeOfType.Int8);
       return x.readInt8();
     }
 
@@ -153,11 +150,11 @@ export const BinaryReadStreamMixins = <
       return await this.readInt16BE();
     }
     async readInt16LE() {
-      const x = await this.read(SizeOfType.Int16);
+      const x = await this.get(SizeOfType.Int16);
       return x.readInt16LE();
     }
     async readInt16BE() {
-      const x = await this.read(SizeOfType.Int16);
+      const x = await this.get(SizeOfType.Int16);
       return x.readInt16BE();
     }
     async readInt32(littleEndian?: boolean) {
@@ -167,11 +164,11 @@ export const BinaryReadStreamMixins = <
       return await this.readInt32BE();
     }
     async readInt32LE() {
-      const x = await this.read(SizeOfType.Int32);
+      const x = await this.get(SizeOfType.Int32);
       return x.readInt32LE();
     }
     async readInt32BE() {
-      const x = await this.read(SizeOfType.Int32);
+      const x = await this.get(SizeOfType.Int32);
       return x.readInt32BE();
     }
 
@@ -182,16 +179,16 @@ export const BinaryReadStreamMixins = <
       return await this.readBigInt64BE();
     }
     async readBigInt64LE() {
-      const x = await this.read(SizeOfType.BigInt64);
+      const x = await this.get(SizeOfType.BigInt64);
       return x.readBigInt64LE();
     }
     async readBigInt64BE() {
-      const x = await this.read(SizeOfType.BigInt64);
+      const x = await this.get(SizeOfType.BigInt64);
       return x.readBigInt64BE();
     }
 
     async readUint8() {
-      const x = await this.read(SizeOfType.Int8);
+      const x = await this.get(SizeOfType.Int8);
       return x.readUint8();
     }
     async readUint16(littleEndian?: boolean) {
@@ -201,11 +198,11 @@ export const BinaryReadStreamMixins = <
       return await this.readUint16BE();
     }
     async readUint16LE() {
-      const x = await this.read(SizeOfType.Int16);
+      const x = await this.get(SizeOfType.Int16);
       return x.readUint16LE();
     }
     async readUint16BE() {
-      const x = await this.read(SizeOfType.Int16);
+      const x = await this.get(SizeOfType.Int16);
       return x.readUint16BE();
     }
     async readUint32(littleEndian?: boolean) {
@@ -215,11 +212,11 @@ export const BinaryReadStreamMixins = <
       return await this.readUint32BE();
     }
     async readUint32LE() {
-      const x = await this.read(SizeOfType.Int32);
+      const x = await this.get(SizeOfType.Int32);
       return x.readUint32LE();
     }
     async readUint32BE() {
-      const x = await this.read(SizeOfType.Int32);
+      const x = await this.get(SizeOfType.Int32);
       return x.readUint32BE();
     }
     async readBigUint64(littleEndian?: boolean) {
@@ -229,11 +226,11 @@ export const BinaryReadStreamMixins = <
       return await this.readBigUint64BE();
     }
     async readBigUint64LE() {
-      const x = await this.read(SizeOfType.BigInt64);
+      const x = await this.get(SizeOfType.BigInt64);
       return x.readBigUint64LE();
     }
     async readBigUint64BE() {
-      const x = await this.read(SizeOfType.BigInt64);
+      const x = await this.get(SizeOfType.BigInt64);
       return x.readBigUint64BE();
     }
     async readFloat(littleEndian?: boolean) {
@@ -243,11 +240,11 @@ export const BinaryReadStreamMixins = <
       return await this.readFloatBE();
     }
     async readFloatLE() {
-      const x = await this.read(SizeOfType.Float);
+      const x = await this.get(SizeOfType.Float);
       return x.readFloatLE();
     }
     async readFloatBE() {
-      const x = await this.read(SizeOfType.Float);
+      const x = await this.get(SizeOfType.Float);
       return x.readFloatBE();
     }
     async readDouble(littleEndian?: boolean) {
@@ -257,11 +254,11 @@ export const BinaryReadStreamMixins = <
       return await this.readDoubleBE();
     }
     async readDoubleLE() {
-      const x = await this.read(SizeOfType.Double);
+      const x = await this.get(SizeOfType.Double);
       return x.readDoubleLE();
     }
     async readDoubleBE() {
-      const x = await this.read(SizeOfType.Double);
+      const x = await this.get(SizeOfType.Double);
       return x.readDoubleBE();
     }
   };
@@ -271,7 +268,7 @@ export const IBinaryReadableMixins = <
 >(
   Base: T
 ) =>
-  class IBinaryReadable extends Base implements Readable {
+  class IBinaryReadableImpl extends Base implements Readable {
     get readableAborted() {
       return this.stream.readableAborted;
     }
@@ -308,13 +305,16 @@ export const IBinaryReadableMixins = <
     get closed() {
       return this.stream.closed;
     }
-    _construct?(callback: (error?: Error | null | undefined) => void): void {
-      this.stream._construct?.(callback);
+    get _construct() {
+      return this.stream._construct;
+    }
+    set _construct(value) {
+      this.stream._construct = value;
     }
     _read(size: number): void {
       this.stream._read(size);
     }
-    read(size?: number | undefined) {
+    read(size?: number) {
       return this.stream.read(size);
     }
     setEncoding(encoding: BufferEncoding): this {
@@ -332,27 +332,27 @@ export const IBinaryReadableMixins = <
     isPaused(): boolean {
       return this.stream.isPaused();
     }
-    unpipe(destination?: NodeJS.WritableStream | undefined): this {
+    unpipe(destination?: NodeJS.WritableStream): this {
       this.stream.unpipe(destination);
       return this;
     }
-    unshift(chunk: any, encoding?: BufferEncoding | undefined): void {
+    unshift(chunk: any, encoding?: BufferEncoding): void {
       this.stream.unshift(chunk, encoding);
     }
     wrap(stream: NodeJS.ReadableStream): this {
       this.stream.wrap(stream);
       return this;
     }
-    push(chunk: any, encoding?: BufferEncoding | undefined): boolean {
+    push(chunk: any, encoding?: BufferEncoding): boolean {
       return this.stream.push(chunk, encoding);
     }
     _destroy(
       error: Error | null,
-      callback: (error?: Error | null | undefined) => void
+      callback: (error?: Error | null) => void
     ): void {
       this.stream._destroy(error, callback);
     }
-    destroy(error?: Error | undefined): this {
+    destroy(error?: Error): this {
       this.stream.destroy(error);
       return this;
     }
@@ -409,7 +409,7 @@ export const IBinaryReadableMixins = <
     }
     pipe<T extends NodeJS.WritableStream>(
       destination: T,
-      options?: { end?: boolean | undefined } | undefined
+      options?: { end?: boolean | undefined }
     ): T {
       return this.stream.pipe(destination, options);
     }
@@ -417,7 +417,7 @@ export const IBinaryReadableMixins = <
       this.stream.off(eventName, listener);
       return this;
     }
-    removeAllListeners(event?: string | symbol | undefined): this {
+    removeAllListeners(event?: string | symbol): this {
       this.stream.removeAllListeners(event);
       return this;
     }
@@ -434,18 +434,22 @@ export const IBinaryReadableMixins = <
     rawListeners(eventName: string | symbol): Function[] {
       return this.stream.rawListeners(eventName);
     }
-    listenerCount(
-      eventName: string | symbol,
-      listener?: Function | undefined
-    ): number {
+    listenerCount(eventName: string | symbol, listener?: Function): number {
       return this.stream.listenerCount(eventName, listener);
     }
     eventNames(): (string | symbol)[] {
       return this.stream.eventNames();
     }
   };
+
+export const BinaryReadStreamMixins = <
+  T extends Constructor<IBinaryHelper<Readable>>
+>(
+  Base: T
+) => IBinaryReadStreamMixins(IBinaryReadableMixins(Base));
+
 export class BinaryReadStream extends BinaryReadStreamMixins(
-  IBinaryReadableMixins(IBinaryHelper<Readable>)
+  IBinaryHelper<Readable>
 ) {
   static from(...args: ConstructorParameters<typeof BinaryReadStream>) {
     return new this(...args);

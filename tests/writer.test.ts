@@ -13,10 +13,12 @@ import {
   NumberType,
   CASES_TEXT,
   CloseStream,
-} from "./utils";
+} from "./utils.js";
 import path from "node:path";
-import { BinaryWriteStream } from "../src";
-import { NullOfEncoding } from "../src/constants";
+
+import { BinaryWriteStream } from "../src/index.js";
+import { NullOfEncoding } from "../src/constants.js";
+
 const tmpdir = os.tmpdir();
 const temp = fs.mkdtempSync(path.join(tmpdir, "binary-streams"));
 const createWriteStream = (file: string) =>
@@ -175,30 +177,3 @@ describe("BinaryWriter", async () => {
     MakeTestText(x as BufferEncoding);
   });
 });
-
-// describe("BinaryReader", () => {
-//   it("connect", () => {
-//     const stream = fs.createReadStream(path);
-//     const reader = new BinaryReader();
-//     assert.ok(!reader.readable);
-//     assert.ok(!reader.writable);
-//     assert.ok(!reader.connected);
-//     reader.connect(stream);
-//     assert.ok(reader.readable);
-//     assert.ok(!reader.writable);
-//     assert.ok(reader.connected);
-//     reader.disconnect();
-//     assert.ok(!reader.readable);
-//     assert.ok(!reader.writable);
-//     assert.ok(!reader.connected);
-//     reader.connect(stream);
-//     assert.ok(reader.readable);
-//     assert.ok(!reader.writable);
-//     assert.ok(reader.connected);
-//     stream.close(() => {
-//       assert.ok(!reader.readable);
-//       assert.ok(!reader.writable);
-//       assert.ok(!reader.connected);
-//     });
-//   });
-// });

@@ -4,14 +4,18 @@
 // https://opensource.org/licenses/MIT
 
 import { Duplex } from "node:stream";
-import { IBinaryHelper } from "./hepler";
-import { BinaryWriteStreamMixins, IBinaryWritableMixins } from "./writer";
-import { BinaryReadStreamMixins, IBinaryReadableMixins } from "./reader";
+import { Constructor, IBinaryHelper } from "./hepler.js";
+import { BinaryReadStreamMixins } from "./reader.js";
+import { BinaryWriteStreamMixins } from "./writer.js";
 
-export class BinaryDuplexStream extends BinaryWriteStreamMixins(
-  IBinaryWritableMixins(
-    BinaryReadStreamMixins(IBinaryReadableMixins(IBinaryHelper<Duplex>))
-  )
+export const BinaryDuplexStreamMixins = <
+  T extends Constructor<IBinaryHelper<Duplex>>
+>(
+  Base: T
+) => BinaryWriteStreamMixins(BinaryReadStreamMixins(Base));
+
+export class BinaryDuplexStream extends BinaryDuplexStreamMixins(
+  IBinaryHelper<Duplex>
 ) {
   static from(...args: ConstructorParameters<typeof BinaryDuplexStream>) {
     return new this(...args);

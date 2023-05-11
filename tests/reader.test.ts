@@ -5,19 +5,21 @@
 
 import { after, describe, it } from "node:test";
 import os from "node:os";
-import { BinaryReadStream } from "../src";
+import { BinaryReadStream } from "../src/index.js";
 import assert from "node:assert";
-import fs, { read } from "node:fs";
+import fs from "node:fs";
 import {
   AllNumberType,
   CASES,
   NumberType,
   CASES_TEXT,
   CloseStream,
-} from "./utils";
+} from "./utils.js";
+
 import path from "node:path";
-import { NullOfEncoding } from "../src/constants";
+import { NullOfEncoding } from "../src/constants.js";
 import { Readable } from "node:stream";
+
 const tmpdir = os.tmpdir();
 const temp = fs.mkdtempSync(path.join(tmpdir, "binary-streams"));
 const createReadStream = (file: string, data: Buffer) => {
@@ -25,9 +27,7 @@ const createReadStream = (file: string, data: Buffer) => {
   fs.writeFileSync(target, data);
   return fs.createReadStream(path.join(temp, file));
 };
-const readFile = (file: string) => fs.readFileSync(path.join(temp, file));
 describe("BinaryReader", async () => {
-  const path = "test.bin";
   after(() => {
     fs.rmSync(temp, { recursive: true });
   });

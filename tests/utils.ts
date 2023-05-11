@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import { ReadStream, WriteStream } from "node:fs";
-import { SizeOfEncoding, SizeOfType } from "../src/constants";
+import { SizeOfEncoding, SizeOfType } from "../src/constants.js";
 
 export type AllNumberType = keyof typeof SizeOfType;
 export type Int8Type = "Int8" | "Uint8";

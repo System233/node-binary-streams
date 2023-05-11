@@ -4,19 +4,16 @@
 // https://opensource.org/licenses/MIT
 
 import { Writable } from "node:stream";
-import { NullOfEncoding, SizeOfType } from "./constants";
-import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler";
-import { Readable } from "stream";
-import { WritableEvent } from "./events";
+import { NullOfEncoding, SizeOfType } from "./constants.js";
+import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler.js";
+import { WritableEvent } from "./events.js";
 
-
-
-export const BinaryWriteStreamMixins = <
+export const IBinaryWriteStreamMixins = <
   T extends IBinaryHelperConstructor<Writable>
 >(
   Base: T
 ) =>
-  class IBinaryWriteStream extends Base {
+  class IBinaryWriteStreamImpl extends Base {
     alloc(size: number, writer: (buffer: Buffer) => void) {
       const buffer = Buffer.alloc(size);
       writer(buffer);
@@ -195,7 +192,7 @@ export const IBinaryWritableMixins = <
 >(
   Base: T
 ) =>
-  class IBinaryWritable extends Base implements Writable {
+  class IBinaryWritableImpl extends Base implements Writable {
     get writable() {
       return this.stream.writable;
     }
@@ -232,36 +229,37 @@ export const IBinaryWritableMixins = <
     _write(
       chunk: any,
       encoding: BufferEncoding,
-      callback: (error?: Error | null | undefined) => void
+      callback: (error?: Error | null) => void
     ): void {
       return this.stream._write(chunk, encoding, callback);
     }
-    _writev?(
-      chunks: { chunk: any; encoding: BufferEncoding }[],
-      callback: (error?: Error | null | undefined) => void
-    ): void {
-      return this.stream._writev?.(chunks, callback);
+
+    get _writev() {
+      return this.stream._writev;
     }
-    _construct?(callback: (error?: Error | null | undefined) => void): void {
-      return this.stream._construct?.(callback);
+    set _writev(value) {
+      this.stream._writev = value;
+    }
+    get _construct() {
+      return this.stream._construct;
+    }
+    set _construct(value) {
+      this.stream._construct = value;
     }
     _destroy(
       error: Error | null,
-      callback: (error?: Error | null | undefined) => void
+      callback: (error?: Error | null) => void
     ): void {
       return this.stream._destroy(error, callback);
     }
-    _final(callback: (error?: Error | null | undefined) => void): void {
+    _final(callback: (error?: Error | null) => void): void {
       return this.stream._final(callback);
     }
-    write(
-      chunk: any,
-      callback?: ((error: Error | null | undefined) => void) | undefined
-    ): boolean;
+    write(chunk: any, callback?: (error: Error | null) => void): boolean;
     write(
       chunk: any,
       encoding: BufferEncoding,
-      callback?: ((error: Error | null | undefined) => void) | undefined
+      callback?: (error: Error | null) => void
     ): boolean;
     write(chunk: any, encoding?: any, callback?: any): boolean {
       return this.stream.write(chunk, encoding, callback);
@@ -270,15 +268,11 @@ export const IBinaryWritableMixins = <
       this.stream.setDefaultEncoding(encoding);
       return this;
     }
-    end(cb?: (() => void) | undefined): this;
-    end(chunk: any, cb?: (() => void) | undefined): this;
-    end(
-      chunk: any,
-      encoding: BufferEncoding,
-      cb?: (() => void) | undefined
-    ): this;
-    end(chunk?: unknown, encoding?: unknown, cb?: unknown): this {
-      this.stream.end(chunk);
+    end(cb?: () => void): this;
+    end(chunk: any, cb?: () => void): this;
+    end(chunk: any, encoding: BufferEncoding, cb?: () => void): this;
+    end(chunk?: any, encoding?: any, cb?: any): this {
+      this.stream.end(chunk, encoding, cb);
       return this;
     }
     cork(): void {
@@ -287,7 +281,7 @@ export const IBinaryWritableMixins = <
     uncork(): void {
       return this.stream.uncork();
     }
-    destroy(error?: Error | undefined): this {
+    destroy(error?: Error): this {
       this.stream.destroy(error);
       return this;
     }
@@ -343,7 +337,7 @@ export const IBinaryWritableMixins = <
     }
     pipe<T extends NodeJS.WritableStream>(
       destination: T,
-      options?: { end?: boolean | undefined } | undefined
+      options?: { end?: boolean | undefined }
     ): T {
       return this.stream.pipe(destination, options);
     }
@@ -372,10 +366,7 @@ export const IBinaryWritableMixins = <
     rawListeners(eventName: string | symbol): Function[] {
       return this.rawListeners(eventName);
     }
-    listenerCount(
-      eventName: string | symbol,
-      listener?: Function | undefined
-    ): number {
+    listenerCount(eventName: string | symbol, listener?: Function): number {
       return this.listenerCount(eventName, listener);
     }
     eventNames(): (string | symbol)[] {
@@ -383,8 +374,14 @@ export const IBinaryWritableMixins = <
     }
   };
 
+export const BinaryWriteStreamMixins = <
+  T extends Constructor<IBinaryHelper<Writable>>
+>(
+  Base: T
+) => IBinaryWriteStreamMixins(IBinaryWritableMixins(Base));
+
 export class BinaryWriteStream extends BinaryWriteStreamMixins(
-  IBinaryWritableMixins(IBinaryHelper<Writable>)
+  IBinaryHelper<Writable>
 ) {
   static from(...args: ConstructorParameters<typeof BinaryWriteStream>) {
     return new this(...args);
