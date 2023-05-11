@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import { Writable } from "stream";
-import { BinaryWriteStream } from "../src";
+import { BinaryWriteStream } from "../src/index.js";
 
 const wstream=new Writable();
 wstream._write=chunk=>console.log('write',chunk)

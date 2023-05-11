@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import { Readable } from "stream";
-import { BinaryReadStream } from "../src";
+import { BinaryReadStream } from "../src/index.js";
 
 (async()=>{
 

@@ -3,7 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 import net, { AddressInfo } from 'node:net'
-import { BinaryDuplexStream } from '../src';
+import { BinaryDuplexStream } from "../src/index.js";
 (async()=>{
     const server = net.createServer((socket) =>socket.pipe(socket));
     server.listen()
