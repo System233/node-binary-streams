@@ -5,14 +5,56 @@
 
 import { Readable } from "node:stream";
 import { SizeOfEncoding, NullOfEncoding, SizeOfType } from "./constants.js";
-import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler.js";
+import { Constructor, IBinaryHelper } from "./hepler.js";
 import { ReadableEvent } from "./events.js";
 
-export const IBinaryReadStreamMixins = <
-  T extends IBinaryHelperConstructor<Readable>
->(
-  Base: T
-) =>
+export interface IBinaryReadStream {
+  get(size: number): Promise<Buffer>;
+  readUntil(until: Buffer): Promise<Buffer>;
+  readBytes(size: number): Promise<Buffer>;
+  readLine(encoding?: BufferEncoding): Promise<string>;
+  readCString(encoding?: BufferEncoding): Promise<string>;
+  readString(size: number, encoding?: BufferEncoding): Promise<string>;
+  readUTF8(size: number): Promise<string>;
+  readBase64(size: number): Promise<Buffer>;
+  readHex(size: number): Promise<Buffer>;
+  readInt(byteLength: number, littleEndian?: boolean): Promise<number>;
+  readIntLE(byteLength: number): Promise<number>;
+  readIntBE(byteLength: number): Promise<number>;
+  readUint(byteLength: number, littleEndian?: boolean): Promise<number>;
+  readUintLE(byteLength: number): Promise<number>;
+  readUintBE(byteLength: number): Promise<number>;
+  readInt8(): Promise<number>;
+  readInt16(littleEndian?: boolean): Promise<number>;
+  readInt16LE(): Promise<number>;
+  readInt16BE(): Promise<number>;
+  readInt32(littleEndian?: boolean): Promise<number>;
+  readInt32LE(): Promise<number>;
+  readInt32BE(): Promise<number>;
+  readBigInt64(littleEndian?: boolean): Promise<bigint>;
+  readBigInt64LE(): Promise<bigint>;
+  readBigInt64BE(): Promise<bigint>;
+  readUint8(): Promise<number>;
+  readUint16(littleEndian?: boolean): Promise<number>;
+  readUint16LE(): Promise<number>;
+  readUint16BE(): Promise<number>;
+  readUint32(littleEndian?: boolean): Promise<number>;
+  readUint32LE(): Promise<number>;
+  readUint32BE(): Promise<number>;
+  readBigUint64(littleEndian?: boolean): Promise<bigint>;
+  readBigUint64LE(): Promise<bigint>;
+  readBigUint64BE(): Promise<bigint>;
+  readFloat(littleEndian?: boolean): Promise<number>;
+  readFloatLE(): Promise<number>;
+  readFloatBE(): Promise<number>;
+  readDouble(littleEndian?: boolean): Promise<number>;
+  readDoubleLE(): Promise<number>;
+  readDoubleBE(): Promise<number>;
+}
+
+export const IBinaryReadStreamMixins = <T extends Readable>(
+  Base: Constructor<IBinaryHelper<T> & Readable>
+): Constructor<IBinaryHelper<T> & Readable & IBinaryReadStream> =>
   class IBinaryReadStreamImpl extends Base {
     async get(size: number) {
       if (!this.readable) {
@@ -263,11 +305,9 @@ export const IBinaryReadStreamMixins = <
     }
   };
 
-export const IBinaryReadableMixins = <
-  T extends Constructor<IBinaryHelper<Readable>>
->(
-  Base: T
-) =>
+export const IBinaryReadableMixins = <T extends Readable>(
+  Base: Constructor<IBinaryHelper<T>>
+): Constructor<IBinaryHelper<T> & Readable> =>
   class IBinaryReadableImpl extends Base implements Readable {
     get readableAborted() {
       return this.stream.readableAborted;
@@ -442,16 +482,14 @@ export const IBinaryReadableMixins = <
     }
   };
 
-export const BinaryReadStreamMixins = <
-  T extends Constructor<IBinaryHelper<Readable>>
->(
-  Base: T
+export const BinaryReadStreamMixins = <T extends Readable>(
+  Base: Constructor<IBinaryHelper<T>>
 ) => IBinaryReadStreamMixins(IBinaryReadableMixins(Base));
 
 export class BinaryReadStream extends BinaryReadStreamMixins(
   IBinaryHelper<Readable>
 ) {
-  static from(...args: ConstructorParameters<typeof BinaryReadStream>) {
+  static from(...args: ConstructorParameters<typeof IBinaryHelper<Readable>>) {
     return new this(...args);
   }
 }

@@ -5,9 +5,6 @@
 
 import { Readable, Writable, Duplex } from "node:stream";
 
-export type IBinaryHelperConstructor<T extends Readable | Writable | Duplex> =
-  new (...args: any[]) => IBinaryHelper<T> & T;
-
 export type Constructor<T> = new (...args: any[]) => T;
 
 export interface IBinaryHelperOption {

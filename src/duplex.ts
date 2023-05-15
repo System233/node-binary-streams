@@ -5,19 +5,20 @@
 
 import { Duplex } from "node:stream";
 import { Constructor, IBinaryHelper } from "./hepler.js";
-import { BinaryReadStreamMixins } from "./reader.js";
-import { BinaryWriteStreamMixins } from "./writer.js";
+import { BinaryReadStreamMixins, IBinaryReadStream } from "./reader.js";
+import { BinaryWriteStreamMixins, IBinaryWriteStream } from "./writer.js";
 
-export const BinaryDuplexStreamMixins = <
-  T extends Constructor<IBinaryHelper<Duplex>>
->(
-  Base: T
-) => BinaryWriteStreamMixins(BinaryReadStreamMixins(Base));
+export const BinaryDuplexStreamMixins = <T extends Duplex>(
+  Base: Constructor<IBinaryHelper<T>>
+) =>
+  BinaryWriteStreamMixins(BinaryReadStreamMixins(Base)) as Constructor<
+    IBinaryHelper<T> & Duplex & IBinaryReadStream & IBinaryWriteStream
+  >;
 
 export class BinaryDuplexStream extends BinaryDuplexStreamMixins(
   IBinaryHelper<Duplex>
 ) {
-  static from(...args: ConstructorParameters<typeof BinaryDuplexStream>) {
+  static from(...args: ConstructorParameters<typeof IBinaryHelper<Duplex>>) {
     return new this(...args);
   }
 }

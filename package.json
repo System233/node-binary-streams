@@ -1,6 +1,6 @@
 {
   "name": "binary-streams",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A `BufferLike` Binary Stream Wrapper for Node `Readable`/`Writable`/`Duplex` Stream.",
   "type": "module",
   "main": "dist/cjs/index.js",
@@ -41,13 +41,11 @@
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/types/index.js"
+      "require": "./dist/cjs/index.js"
     },
     "./*": {
       "import": "./dist/esm/*.js",
-      "require": "./dist/cjs/*.js",
-      "types": "./dist/types/*.d.js"
+      "require": "./dist/cjs/*.js"
     }
   }
 }

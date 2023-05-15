@@ -5,14 +5,55 @@
 
 import { Writable } from "node:stream";
 import { NullOfEncoding, SizeOfType } from "./constants.js";
-import { IBinaryHelperConstructor, Constructor, IBinaryHelper } from "./hepler.js";
+import { Constructor, IBinaryHelper } from "./hepler.js";
 import { WritableEvent } from "./events.js";
 
-export const IBinaryWriteStreamMixins = <
-  T extends IBinaryHelperConstructor<Writable>
->(
-  Base: T
-) =>
+export interface IBinaryWriteStream {
+  alloc(size: number, writer: (buffer: Buffer) => void): this;
+  writeBytes(chunk: Buffer): this;
+  writeString(value: string, encoding?: BufferEncoding): this;
+  writeCString(value: string, encoding?: BufferEncoding): this;
+  writeLine(line: string, end?: string, encoding?: BufferEncoding): this;
+  writeUTF8(value: string): this;
+  writeBase64(value: Buffer): this;
+  writeHex(value: Buffer): this;
+  writeInt(value: number, byteLength: number, littleEndian?: boolean): this;
+  writeIntLE(value: number, byteLength: number): this;
+  writeIntBE(value: number, byteLength: number): this;
+  writeUint(value: number, byteLength: number, littleEndian?: boolean): this;
+  writeUintLE(value: number, byteLength: number): this;
+  writeUintBE(value: number, byteLength: number): this;
+  writeInt8(value: number): this;
+  writeInt16(value: number, littleEndian?: boolean): this;
+  writeInt16LE(value: number): this;
+  writeInt16BE(value: number): this;
+  writeInt32(value: number, littleEndian?: boolean): this;
+  writeInt32LE(value: number): this;
+  writeInt32BE(value: number): this;
+  writeBigInt64(value: bigint, littleEndian?: boolean): this;
+  writeBigInt64LE(value: bigint): this;
+  writeBigInt64BE(value: bigint): this;
+  writeUint8(value: number): this;
+  writeUint16(value: number, littleEndian?: boolean): this;
+  writeUint16LE(value: number): this;
+  writeUint16BE(value: number): this;
+  writeUint32(value: number, littleEndian?: boolean): this;
+  writeUint32LE(value: number): this;
+  writeUint32BE(value: number): this;
+  writeBigUint64(value: bigint, littleEndian?: boolean): this;
+  writeBigUint64LE(value: bigint): this;
+  writeBigUint64BE(value: bigint): this;
+  writeFloat(value: number, littleEndian?: boolean): this;
+  writeFloatLE(value: number): this;
+  writeFloatBE(value: number): this;
+  writeDouble(value: number, littleEndian?: boolean): this;
+  writeDoubleLE(value: number): this;
+  writeDoubleBE(value: number): this;
+}
+
+export const IBinaryWriteStreamMixins = <T extends Writable>(
+  Base: Constructor<IBinaryHelper<T> & Writable>
+): Constructor<IBinaryHelper<T> & Writable & IBinaryWriteStream> =>
   class IBinaryWriteStreamImpl extends Base {
     alloc(size: number, writer: (buffer: Buffer) => void) {
       const buffer = Buffer.alloc(size);
@@ -187,11 +228,9 @@ export const IBinaryWriteStreamMixins = <
     }
   };
 
-export const IBinaryWritableMixins = <
-  T extends Constructor<IBinaryHelper<Writable>>
->(
-  Base: T
-) =>
+export const IBinaryWritableMixins = <T extends Writable>(
+  Base: Constructor<IBinaryHelper<T>>
+): Constructor<IBinaryHelper<T> & Writable> =>
   class IBinaryWritableImpl extends Base implements Writable {
     get writable() {
       return this.stream.writable;
@@ -374,16 +413,14 @@ export const IBinaryWritableMixins = <
     }
   };
 
-export const BinaryWriteStreamMixins = <
-  T extends Constructor<IBinaryHelper<Writable>>
->(
-  Base: T
+export const BinaryWriteStreamMixins = <T extends Writable>(
+  Base: Constructor<IBinaryHelper<T>>
 ) => IBinaryWriteStreamMixins(IBinaryWritableMixins(Base));
 
 export class BinaryWriteStream extends BinaryWriteStreamMixins(
   IBinaryHelper<Writable>
 ) {
-  static from(...args: ConstructorParameters<typeof BinaryWriteStream>) {
+  static from(...args: ConstructorParameters<typeof IBinaryHelper<Writable>>) {
     return new this(...args);
   }
 }
